@@ -347,20 +347,22 @@ class ReportController extends Controller
 
 
 
-   public function designersReport(Request $request): JsonResponse
+  public function designersReport(Request $request): JsonResponse
 {
     $request->validate([
-        'designer_id' => 'nullable|exists:users,id', // الفلترة بالـ ID الآن
+        'designer_id' => 'nullable', // إزالة exists مؤقتاً للتأكد من استقبال القيمة مهما كان نوعها
         'date_from'   => 'nullable|date',
         'date_to'     => 'nullable|date',
     ]);
 
-    $designerId = $request->designer_id;
+    // استخدام filled للتحقق من وجود قيمة فعلية (ليست null وليست نصاً فارغاً)
+    $designerId = $request->input('designer_id');
 
-    // جلب الفواتير مع علاقة المصمم لضمان وجود الاسم
-    $query = \App\Models\SalesHeader::with('designer')->whereNotNull('designer_id');
+    $query = \App\Models\SalesHeader::with(['designer', 'partner'])
+        ->whereNotNull('designer_id');
 
-    if ($designerId) {
+    // تطبيق فلتر المصمم
+    if ($request->filled('designer_id')) {
         $query->where('designer_id', $designerId);
     }
 
@@ -369,51 +371,50 @@ class ReportController extends Controller
 
     $sales = $query->get();
 
-    // حالة الكشف التفصيلي لمصمم واحد
-    if ($designerId) {
+    // 1. حالة الكشف التفصيلي (عند اختيار مصمم محدد)
+    if ($request->filled('designer_id')) {
         $data = $sales->map(function ($inv) {
             return [
-                'date'           => $inv->invoice_date,
+                'date'           => $inv->invoice_date->format('Y-m-d'),
                 'trx_no'         => (string)$inv->trx_no,
-                'partner_name'   => $inv->partner->name ?? 'عميل نقدي',
-                'net_amount'     => number_format($inv->net_amount, 4, '.', ''),
-                'commission_val' => number_format(($inv->net_amount * 10) / 100, 4, '.', ''),
+                'partner_name'   => $inv->partner->full_name ?? ($inv->partner->name ?? 'عميل نقدي'),
+                'net_amount'     => $inv->net_amount,
+                'commission_val' => ($inv->net_amount * 10) / 100,
             ];
         });
 
         return response()->json([
-            'success' => true,
+            'success'     => true,
             'is_detailed' => true,
-            'data'    => $data,
-            'totals'  => [
-                'total_sales' => number_format($sales->sum('net_amount'), 4, '.', ''),
-                'total_commissions' => number_format(($sales->sum('net_amount') * 10) / 100, 4, '.', ''),
+            'data'        => $data,
+            'totals'      => [
+                'total_sales'       => $sales->sum('net_amount'),
+                'total_commissions' => ($sales->sum('net_amount') * 10) / 100,
             ]
         ]);
     }
 
-    // الحالة العامة: تجميع حسب designer_id
+    // 2. الحالة العامة (تجميع حسب المصمم)
     $reportData = $sales->groupBy('designer_id')->map(function ($items, $id) {
         $designer = $items->first()->designer;
         $totalSales = $items->sum('net_amount');
 
         return [
-            'designer_id'   => $id,
-            'designer_name' => $designer->full_name ?? 'غير معرف',
-            'invoices_count'=> $items->count(),
-            'total_sales'   => number_format($totalSales, 4, '.', ''),
-            'commission_rate' => 0,
-            'commission_val'=> number_format(($totalSales * 10) / 100, 4, '.', ''),
+            'designer_id'    => $id,
+            'designer_name'  => $designer->full_name ?? 'غير معرف',
+            'invoices_count' => $items->count(),
+            'total_sales'    => $totalSales,
+            'commission_val' => ($totalSales * 10) / 100,
         ];
     })->values();
 
     return response()->json([
-        'success' => true,
+        'success'     => true,
         'is_detailed' => false,
-        'data'    => $reportData,
-        'totals'  => [
-            'total_sales' => number_format($sales->sum('net_amount'), 4, '.', ''),
-            'total_commissions' => number_format(($sales->sum('net_amount') * 10) / 100, 4, '.', ''),
+        'data'        => $reportData,
+        'totals'      => [
+            'total_sales'       => $sales->sum('net_amount'),
+            'total_commissions' => ($sales->sum('net_amount') * 10) / 100,
         ]
     ]);
 }

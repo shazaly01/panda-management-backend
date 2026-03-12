@@ -53,6 +53,11 @@ class PermissionSeeder extends Seeder
 
             // الورديات
             'shift.view', 'shift.create', 'shift.update', 'shift.delete', // فتح وإغلاق الورديات
+
+            'sale.view', // التأكد أنها بالمفرد كما في الـ Policy
+            'report.view', // إضافة هذه لأنها مستخدمة في الـ Sidebar
+            'backup.view', // إضافة هذه لأنها مستخدمة في الـ Router والـ Sidebar
+            'inventory-trx.view', // إضافة هذه لتوحيد صلاحيات المخازن (التسويات والتحويلات)
         ];
 
         // إنشاء الصلاحيات في قاعدة البيانات
