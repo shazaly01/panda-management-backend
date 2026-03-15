@@ -65,6 +65,7 @@ class StoreTransactionRequest extends FormRequest
             $rules['paid_amount']     = ['nullable', 'numeric', 'min:0']; // المبلغ المدفوع
             $rules['discount_amount'] = ['nullable', 'numeric', 'min:0']; // قيمة الخصم
             $rules['tax_amount']      = ['nullable', 'numeric', 'min:0']; // قيمة الضريبة
+            $rules['total_area']      = ['nullable', 'numeric', 'min:0'];
 
             // الإضافات الخاصة بنشاط الطباعة
             $rules['walk_in_customer_name'] = ['nullable', 'string', 'max:255'];

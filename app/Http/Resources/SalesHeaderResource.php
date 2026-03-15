@@ -48,7 +48,7 @@ class SalesHeaderResource extends JsonResource
 
             // --- [تم التعديل هنا] إرسال المبلغ المدفوع المحسوب ---
             'paid_amount'       => $calculatedPaidAmount,
-
+            'total_area'        => $this->total_area !== null ? (float)$this->total_area : 0,
             'design_commission' => $this->design_commission !== null ? (float)$this->design_commission : null,
 
             // تفاصيل الأصناف

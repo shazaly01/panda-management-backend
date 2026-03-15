@@ -27,7 +27,7 @@ class SalesHeader extends Model
         'net_amount' => 'decimal:4',
         'paid_amount' => 'decimal:4',
         'remaining_amount' => 'decimal:4',
-
+        'total_area' => 'decimal:4',
         'design_commission' => 'decimal:4',
     ];
 
