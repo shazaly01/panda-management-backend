@@ -61,8 +61,9 @@ class SalesService
                 $length = $itemData['length'] ?? null;
                 $width = $itemData['width'] ?? null;
 
-                $area = (!empty($length) && !empty($width)) ? ($length * $width) : null;
-                $rowTotal = $area ? ($area * $qty * $price) : ($qty * $price);
+                $area = (!empty($length) && !empty($width)) ? ($length * $width * $qty) : null;
+                // حساب إجمالي السطر (الأمتار × السعر) أو (الكمية × السعر) إذا لم تكن هناك أمتار
+                $rowTotal = $area ? ($area * $price) : ($qty * $price);
 
                 $totalAmount += $rowTotal;
                 $unitCost = $product->base_cost * ($itemData['unit_factor'] ?? 1);
@@ -151,8 +152,10 @@ class SalesService
                 $length = $itemData['length'] ?? null;
                 $width = $itemData['width'] ?? null;
 
-                $area = (!empty($length) && !empty($width)) ? ($length * $width) : null;
-                $rowTotal = $area ? ($area * $qty * $price) : ($qty * $price);
+                // حساب إجمالي الأمتار (الطول × العرض × الكمية)
+                $area = (!empty($length) && !empty($width)) ? ($length * $width * $qty) : null;
+                // حساب إجمالي السطر (الأمتار × السعر) أو (الكمية × السعر) إذا لم تكن هناك أمتار
+                $rowTotal = $area ? ($area * $price) : ($qty * $price);
 
                 $totalAmount += $rowTotal;
                 $unitCost = $product->base_cost * ($itemData['unit_factor'] ?? 1);
